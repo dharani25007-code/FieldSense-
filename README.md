@@ -11,11 +11,22 @@
 ![Languages](https://img.shields.io/badge/Multilingual-7%20Indian%20Languages-2fa860?style=for-the-badge)
 ![DPG](https://img.shields.io/badge/Architecture-Digital%20Public%20Good-009688?style=for-the-badge)
 ![Hackathon](https://img.shields.io/badge/Hackathon-Build%20with%20AI%3A%20Code%20for%20Communities-orange?style=for-the-badge)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Website-brightgreen?style=for-the-badge&logo=render&logoColor=white)](https://fieldsense-ai.onrender.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-4ecdc4?style=for-the-badge)](./LICENSE)
 
 > ⚡ **Multimodal Vision Diagnosis · Localised Soil & Weather Advisory · 7-Language Voice Engine · Cross-State DPG Telemetry**
 
 </div>
+
+---
+
+## 🌐 Live Production Deployment
+
+FieldSense is fully deployed and live:
+* **Live Public Application**: [https://fieldsense-ai.onrender.com](https://fieldsense-ai.onrender.com)
+* **GitHub Repository**: [https://github.com/dharani25007-code/FieldSense-](https://github.com/dharani25007-code/FieldSense-)
+* **AI Model Engine**: Google Gemini 3.6 Flash API (`@google/genai` v1.15.0)
+* **Cloud DBMS Persistence**: Google Cloud Firestore NoSQL Database
 
 ---
 
