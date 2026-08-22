@@ -1,9 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import fetch from "node-fetch";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = path.join(__dirname, "data.json");
+
+const FIRESTORE_PROJECT_ID = process.env.FIRESTORE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || "fieldsense-dpg";
+const FIRESTORE_API_KEY = process.env.GEMINI_API_KEY || "";
 
 function loadDb() {
   try {
@@ -32,24 +36,78 @@ export function saveDb() {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify({ users, networkLog }, null, 2), "utf8");
   } catch (e) {
-    console.warn("Could not write to data.json:", e.message);
+    console.warn("Could not write to data.json (ephemeral storage):", e.message);
   }
 }
 
-// Ensure initial data.json file exists
+// Write initial local file if missing
 if (!fs.existsSync(DATA_FILE)) {
   saveDb();
+}
+
+/**
+ * Syncs user registrations to Google Cloud Firestore (NoSQL DBMS)
+ */
+async function syncUserToFirestore(user) {
+  if (!FIRESTORE_PROJECT_ID || !FIRESTORE_API_KEY) return;
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/users/${user.id}?key=${FIRESTORE_API_KEY}`;
+    await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: user.id },
+          name: { stringValue: user.name || "" },
+          identifier: { stringValue: user.identifier || "" },
+          role: { stringValue: user.role || "farmer" },
+          state: { stringValue: user.state || "" },
+          createdAt: { stringValue: new Date().toISOString() },
+        },
+      }),
+    });
+  } catch (e) {
+    console.warn("Firestore user sync background notice:", e.message);
+  }
+}
+
+/**
+ * Syncs crop health telemetry to Google Cloud Firestore (NoSQL DBMS)
+ */
+async function syncTelemetryToFirestore(entry) {
+  if (!FIRESTORE_PROJECT_ID || !FIRESTORE_API_KEY) return;
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/telemetry?key=${FIRESTORE_API_KEY}`;
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fields: {
+          type: { stringValue: entry.type || "diagnosis" },
+          crop: { stringValue: entry.crop || "unspecified" },
+          disease: { stringValue: entry.disease || "None" },
+          isHealthy: { booleanValue: Boolean(entry.isHealthy) },
+          state: { stringValue: entry.state || "Unknown" },
+          timestamp: { stringValue: entry.timestamp || new Date().toISOString() },
+        },
+      }),
+    });
+  } catch (e) {
+    console.warn("Firestore telemetry sync background notice:", e.message);
+  }
 }
 
 export function addUser(newUser) {
   users.push(newUser);
   saveDb();
+  syncUserToFirestore(newUser).catch(() => {});
   return newUser;
 }
 
 export function addTelemetry(entry) {
   networkLog.push(entry);
   saveDb();
+  syncTelemetryToFirestore(entry).catch(() => {});
   return entry;
 }
 
