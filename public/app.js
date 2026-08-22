@@ -348,24 +348,43 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ---------- Authentication (Login & Register) ----------
-const authModal = document.getElementById("auth-modal");
-const openAuthBtn = document.getElementById("open-auth-btn");
-const closeAuthBtn = document.getElementById("close-auth-btn");
+// ---------- Authentication Landing Entrance Guard ----------
+const authLandingScreen = document.getElementById("auth-landing-screen");
+const mainAppContainer = document.getElementById("main-app-container");
+
 const userBadge = document.getElementById("user-badge");
 const userNameDisplay = document.getElementById("user-name-display");
 const userRoleDisplay = document.getElementById("user-role-display");
 const logoutBtn = document.getElementById("logout-btn");
 
-const authTabLogin = document.getElementById("auth-tab-login");
-const authTabRegister = document.getElementById("auth-tab-register");
-const authForm = document.getElementById("auth-form");
-const authError = document.getElementById("auth-error");
-const authSubmitBtn = document.getElementById("auth-submit-btn");
+const landingTabLogin = document.getElementById("landing-tab-login");
+const landingTabRegister = document.getElementById("landing-tab-register");
+const landingAuthForm = document.getElementById("landing-auth-form");
+const landingAuthError = document.getElementById("landing-auth-error");
+const landingAuthSubmitBtn = document.getElementById("landing-auth-submit-btn");
 
-const groupName = document.getElementById("group-name");
-const groupRole = document.getElementById("group-role");
-const groupState = document.getElementById("group-state");
+const landingGroupName = document.getElementById("landing-group-name");
+const landingGroupRole = document.getElementById("landing-group-role");
+const landingGroupState = document.getElementById("landing-group-state");
+
+const landingLangSelect = document.getElementById("landing-lang-select");
+
+// Populate landing page language selector
+if (landingLangSelect) {
+  LANGUAGES.forEach((lang) => {
+    const opt = document.createElement("option");
+    opt.value = lang.code;
+    opt.textContent = lang.label;
+    landingLangSelect.appendChild(opt);
+  });
+  landingLangSelect.value = getCurrentLang();
+  landingLangSelect.addEventListener("change", () => {
+    setCurrentLang(landingLangSelect.value);
+    if (langSelect) langSelect.value = landingLangSelect.value;
+    applyTranslations();
+    networkLoaded = false;
+  });
+}
 
 let currentAuthMode = "login";
 let currentUser = null;
@@ -375,19 +394,21 @@ function loadStoredUser() {
   if (stored) {
     try {
       currentUser = JSON.parse(stored);
-      updateUserUI();
     } catch (e) {
       localStorage.removeItem("fieldsense_user");
+      currentUser = null;
     }
   }
+  updateUserUI();
 }
 
 function updateUserUI() {
   if (currentUser) {
-    openAuthBtn.hidden = true;
-    userBadge.hidden = false;
-    userNameDisplay.textContent = currentUser.name;
-    userRoleDisplay.textContent = currentUser.role || "farmer";
+    if (authLandingScreen) authLandingScreen.hidden = true;
+    if (mainAppContainer) mainAppContainer.hidden = false;
+
+    if (userNameDisplay) userNameDisplay.textContent = currentUser.name;
+    if (userRoleDisplay) userRoleDisplay.textContent = currentUser.role || "farmer";
 
     // Auto-fill state fields if user has a registered state
     if (currentUser.state) {
@@ -395,97 +416,83 @@ function updateUserUI() {
       if (advStateSelect && !advStateSelect.value) advStateSelect.value = currentUser.state;
     }
   } else {
-    openAuthBtn.hidden = false;
-    userBadge.hidden = true;
+    if (authLandingScreen) authLandingScreen.hidden = false;
+    if (mainAppContainer) mainAppContainer.hidden = true;
   }
 }
 
-function setAuthMode(mode) {
+function setLandingAuthMode(mode) {
   currentAuthMode = mode;
-  authError.hidden = true;
+  if (landingAuthError) landingAuthError.hidden = true;
 
   if (mode === "login") {
-    authTabLogin.classList.add("active");
-    authTabRegister.classList.remove("active");
-    groupName.hidden = true;
-    groupRole.hidden = true;
-    groupState.hidden = true;
-    authSubmitBtn.textContent = t("loginSubmit");
+    if (landingTabLogin) landingTabLogin.classList.add("active");
+    if (landingTabRegister) landingTabRegister.classList.remove("active");
+    if (landingGroupName) landingGroupName.hidden = true;
+    if (landingGroupRole) landingGroupRole.hidden = true;
+    if (landingGroupState) landingGroupState.hidden = true;
+    if (landingAuthSubmitBtn) landingAuthSubmitBtn.textContent = t("loginSubmit");
   } else {
-    authTabRegister.classList.add("active");
-    authTabLogin.classList.remove("active");
-    groupName.hidden = false;
-    groupRole.hidden = false;
-    groupState.hidden = false;
-    authSubmitBtn.textContent = t("registerSubmit");
+    if (landingTabRegister) landingTabRegister.classList.add("active");
+    if (landingTabLogin) landingTabLogin.classList.remove("active");
+    if (landingGroupName) landingGroupName.hidden = false;
+    if (landingGroupRole) landingGroupRole.hidden = false;
+    if (landingGroupState) landingGroupState.hidden = false;
+    if (landingAuthSubmitBtn) landingAuthSubmitBtn.textContent = t("registerSubmit");
   }
 }
 
-openAuthBtn.addEventListener("click", () => {
-  setAuthMode("login");
-  authModal.hidden = false;
-  authModal.setAttribute("aria-hidden", "false");
-});
+if (landingTabLogin) landingTabLogin.addEventListener("click", () => setLandingAuthMode("login"));
+if (landingTabRegister) landingTabRegister.addEventListener("click", () => setLandingAuthMode("register"));
 
-closeAuthBtn.addEventListener("click", () => {
-  authModal.hidden = true;
-  authModal.setAttribute("aria-hidden", "true");
-});
+if (landingAuthForm) {
+  landingAuthForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (landingAuthError) landingAuthError.hidden = true;
 
-authModal.addEventListener("click", (e) => {
-  if (e.target === authModal) {
-    authModal.hidden = true;
-    authModal.setAttribute("aria-hidden", "true");
-  }
-});
+    const identifier = document.getElementById("landing-auth-identifier").value;
+    const password = document.getElementById("landing-auth-password").value;
+    const name = document.getElementById("landing-auth-name").value;
+    const role = document.getElementById("landing-auth-role").value;
+    const state = document.getElementById("landing-auth-state").value;
 
-authTabLogin.addEventListener("click", () => setAuthMode("login"));
-authTabRegister.addEventListener("click", () => setAuthMode("register"));
+    const endpoint = currentAuthMode === "login" ? "/api/auth/login" : "/api/auth/register";
+    const payload = currentAuthMode === "login"
+      ? { identifier, password }
+      : { name, identifier, password, role, state };
 
-authForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  authError.hidden = true;
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-  const identifier = document.getElementById("auth-identifier").value;
-  const password = document.getElementById("auth-password").value;
-  const name = document.getElementById("auth-name").value;
-  const role = document.getElementById("auth-role").value;
-  const state = document.getElementById("auth-state").value;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Authentication failed.");
 
-  const endpoint = currentAuthMode === "login" ? "/api/auth/login" : "/api/auth/register";
-  const payload = currentAuthMode === "login"
-    ? { identifier, password }
-    : { name, identifier, password, role, state };
+      currentUser = data.user;
+      localStorage.setItem("fieldsense_user", JSON.stringify(currentUser));
+      if (data.token) localStorage.setItem("fieldsense_token", data.token);
 
-  try {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      updateUserUI();
+      landingAuthForm.reset();
+    } catch (err) {
+      if (landingAuthError) {
+        landingAuthError.textContent = err.message;
+        landingAuthError.hidden = false;
+      }
+    }
+  });
+}
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Authentication failed.");
-
-    currentUser = data.user;
-    localStorage.setItem("fieldsense_user", JSON.stringify(currentUser));
-    if (data.token) localStorage.setItem("fieldsense_token", data.token);
-
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    currentUser = null;
+    localStorage.removeItem("fieldsense_user");
+    localStorage.removeItem("fieldsense_token");
     updateUserUI();
-    authModal.hidden = true;
-    authModal.setAttribute("aria-hidden", "true");
-    authForm.reset();
-  } catch (err) {
-    authError.textContent = err.message;
-    authError.hidden = false;
-  }
-});
-
-logoutBtn.addEventListener("click", () => {
-  currentUser = null;
-  localStorage.removeItem("fieldsense_user");
-  localStorage.removeItem("fieldsense_token");
-  updateUserUI();
-});
+  });
+}
 
 loadStoredUser();

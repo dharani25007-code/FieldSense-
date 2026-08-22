@@ -19,10 +19,7 @@ function loadDb() {
     console.warn("Could not load data.json, initializing fresh store:", e.message);
   }
   return {
-    users: [
-      { id: "usr_1", name: "Dharani Dharan", identifier: "farmer@fieldsense.org", password: "password123", role: "farmer", state: "Tamil Nadu" },
-      { id: "usr_2", name: "Dr. K. Anbarasan", identifier: "officer@tnagri.gov.in", password: "password123", role: "officer", state: "Tamil Nadu" },
-    ],
+    users: [],
     networkLog: [],
   };
 }
@@ -39,6 +36,11 @@ export function saveDb() {
   }
 }
 
+// Ensure initial data.json file exists
+if (!fs.existsSync(DATA_FILE)) {
+  saveDb();
+}
+
 export function addUser(newUser) {
   users.push(newUser);
   saveDb();
@@ -49,4 +51,10 @@ export function addTelemetry(entry) {
   networkLog.push(entry);
   saveDb();
   return entry;
+}
+
+export function clearAllData() {
+  users.length = 0;
+  networkLog.length = 0;
+  saveDb();
 }

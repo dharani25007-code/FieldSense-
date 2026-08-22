@@ -11,6 +11,79 @@
 </head>
 <body>
 
+<!-- ============ AUTH LANDING SCREEN (First Entrance Guard) ============ -->
+<div id="auth-landing-screen" class="auth-landing-screen">
+  <div class="auth-landing-card">
+    <div class="auth-landing-brand">
+      <svg class="brand-mark" viewBox="0 0 100 100" width="56" height="56" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="#0f5c30" opacity="0.12"/>
+        <path d="M50 12 C68 18, 78 34, 73 55 C68 72, 50 68, 44 58 C22 50, 18 30, 34 15 C40 10, 45 11, 50 12 Z" fill="#2fa860"/>
+        <path d="M50 18 C46 34, 44 50, 46 66" fill="none" stroke="#0f5c30" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M32 50 L40 50 L45 38 L53 62 L58 46 L63 50 L70 50" fill="none" stroke="#f2fbf5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1 class="auth-landing-title">FieldSense</h1>
+      <p class="auth-landing-tag" data-i18n="brandTag">AI for every field</p>
+    </div>
+
+    <div class="auth-landing-body">
+      <div class="auth-tabs" role="tablist">
+        <button id="landing-tab-login" class="auth-tab active" type="button" data-auth-tab="login" data-i18n="tabLogin">Login</button>
+        <button id="landing-tab-register" class="auth-tab" type="button" data-auth-tab="register" data-i18n="tabRegister">Register</button>
+      </div>
+
+      <form id="landing-auth-form" class="auth-form">
+        <div class="auth-error-box" id="landing-auth-error" hidden></div>
+
+        <div class="form-group" id="landing-group-name" hidden>
+          <label for="landing-auth-name" data-i18n="nameLabel">Full Name</label>
+          <input type="text" id="landing-auth-name" data-i18n-placeholder="namePlaceholder" placeholder="e.g. Ramesh Kumar" />
+        </div>
+
+        <div class="form-group">
+          <label for="landing-auth-identifier" data-i18n="identifierLabel">Email or Phone Number</label>
+          <input type="text" id="landing-auth-identifier" data-i18n-placeholder="identifierPlaceholder" placeholder="e.g. farmer@example.com or 9876543210" required />
+        </div>
+
+        <div class="form-group">
+          <label for="landing-auth-password" data-i18n="passwordLabel">Password</label>
+          <input type="password" id="landing-auth-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Enter password" required />
+        </div>
+
+        <div class="form-group" id="landing-group-role" hidden>
+          <label for="landing-auth-role" data-i18n="roleLabel">Account Type</label>
+          <select id="landing-auth-role">
+            <option value="farmer" data-i18n="roleFarmer">Farmer</option>
+            <option value="officer" data-i18n="roleOfficer">Extension Officer / Agronomist</option>
+            <option value="official" data-i18n="roleOfficial">State Agriculture Official</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="landing-group-state" hidden>
+          <label for="landing-auth-state" data-i18n="stateLabelAuth">State / Union Territory</label>
+          <select id="landing-auth-state">
+            <option value="" data-i18n="selectState">Select state</option>
+            <option>Tamil Nadu</option><option>Karnataka</option><option>Kerala</option>
+            <option>Andhra Pradesh</option><option>Telangana</option><option>Maharashtra</option>
+            <option>Punjab</option><option>Haryana</option><option>Uttar Pradesh</option>
+            <option>Madhya Pradesh</option><option>Bihar</option><option>West Bengal</option>
+            <option>Gujarat</option><option>Rajasthan</option><option>Other</option>
+          </select>
+        </div>
+
+        <button type="submit" id="landing-auth-submit-btn" class="btn-primary auth-submit" data-i18n="loginSubmit">Sign In</button>
+      </form>
+    </div>
+
+    <div class="landing-lang-bar">
+      <label for="landing-lang-select" data-i18n="langLabel">Language</label>
+      <select id="landing-lang-select" class="lang-select" aria-label="Language"></select>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN APPLICATION DASHBOARD (Unlocked after login) ============ -->
+<div id="main-app-container" hidden>
+
 <header class="topbar">
   <div class="brand">
     <svg class="brand-mark" viewBox="0 0 100 100" width="34" height="34" aria-hidden="true">
@@ -32,8 +105,7 @@
     </nav>
     <select id="lang-select" class="lang-select" aria-label="Language"></select>
     <div id="auth-header-container">
-      <button id="open-auth-btn" class="btn-auth" type="button" data-i18n="authBtn">Login / Register</button>
-      <div id="user-badge" class="user-badge" hidden>
+      <div id="user-badge" class="user-badge">
         <div class="user-info">
           <span id="user-name-display" class="user-name"></span>
           <span id="user-role-display" class="user-role"></span>
@@ -182,61 +254,7 @@
   <p data-i18n="footer">FieldSense — built for Build with AI: Code for Communities · Google AI (Gemini) powering every diagnosis and advisory</p>
 </footer>
 
-<!-- Auth Modal -->
-<div id="auth-modal" class="modal-overlay" hidden aria-hidden="true">
-  <div class="modal-card">
-    <button id="close-auth-btn" class="modal-close" type="button" aria-label="Close modal">&times;</button>
-    <div class="modal-header">
-      <h2 data-i18n="authModalTitle">Welcome to FieldSense</h2>
-      <div class="auth-tabs" role="tablist">
-        <button id="auth-tab-login" class="auth-tab active" type="button" data-auth-tab="login" data-i18n="tabLogin">Login</button>
-        <button id="auth-tab-register" class="auth-tab" type="button" data-auth-tab="register" data-i18n="tabRegister">Register</button>
-      </div>
-    </div>
-
-    <form id="auth-form" class="auth-form">
-      <div class="auth-error-box" id="auth-error" hidden></div>
-
-      <div class="form-group" id="group-name" hidden>
-        <label for="auth-name" data-i18n="nameLabel">Full Name</label>
-        <input type="text" id="auth-name" data-i18n-placeholder="namePlaceholder" placeholder="e.g. Ramesh Kumar" />
-      </div>
-
-      <div class="form-group">
-        <label for="auth-identifier" data-i18n="identifierLabel">Email or Phone Number</label>
-        <input type="text" id="auth-identifier" data-i18n-placeholder="identifierPlaceholder" placeholder="e.g. farmer@example.com or 9876543210" required />
-      </div>
-
-      <div class="form-group">
-        <label for="auth-password" data-i18n="passwordLabel">Password</label>
-        <input type="password" id="auth-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Enter password" required />
-      </div>
-
-      <div class="form-group" id="group-role" hidden>
-        <label for="auth-role" data-i18n="roleLabel">Account Type</label>
-        <select id="auth-role">
-          <option value="farmer" data-i18n="roleFarmer">Farmer</option>
-          <option value="officer" data-i18n="roleOfficer">Extension Officer / Agronomist</option>
-          <option value="official" data-i18n="roleOfficial">State Agriculture Official</option>
-        </select>
-      </div>
-
-      <div class="form-group" id="group-state" hidden>
-        <label for="auth-state" data-i18n="stateLabelAuth">State / Union Territory</label>
-        <select id="auth-state">
-          <option value="" data-i18n="selectState">Select state</option>
-          <option>Tamil Nadu</option><option>Karnataka</option><option>Kerala</option>
-          <option>Andhra Pradesh</option><option>Telangana</option><option>Maharashtra</option>
-          <option>Punjab</option><option>Haryana</option><option>Uttar Pradesh</option>
-          <option>Madhya Pradesh</option><option>Bihar</option><option>West Bengal</option>
-          <option>Gujarat</option><option>Rajasthan</option><option>Other</option>
-        </select>
-      </div>
-
-      <button type="submit" id="auth-submit-btn" class="btn-primary auth-submit" data-i18n="loginSubmit">Sign In</button>
-    </form>
-  </div>
-</div>
+</div> <!-- End #main-app-container -->
 
 <script src="i18n.js"></script>
 <script src="app.js"></script>
