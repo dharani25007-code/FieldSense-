@@ -240,6 +240,3 @@ The included `Dockerfile` builds a lightweight Node.js 20 container listening on
 [![Joe Flaming M](https://img.shields.io/badge/Joe_Flaming_M-AI_Vision-2fa860?style=for-the-badge&logo=github&logoColor=white)](https://github.com/joeflaming777-lgtm)
 [![Robinson A](https://img.shields.io/badge/Robinson_A-Product_Strategy-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Robinson2007)
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:2fa860,100:0f5c30&height=120&section=footer&cb=6"/>
-
-</div>
