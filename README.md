@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f5c30,50:2fa860,100:0f5c30&height=220&section=header&text=FieldSense&fontSize=55&fontColor=ffffff&fontAlignY=40&desc=Precision%20Agricultural%20Intelligence%20for%20India's%20Farmers&descAlignY=60&descSize=20&animation=fadeIn&cb=3"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f5c30,50:2fa860,100:0f5c30&height=220&section=header&text=FieldSense&fontSize=55&fontColor=ffffff&fontAlignY=40&desc=Precision%20Agricultural%20Intelligence%20for%20India's%20Farmers&descAlignY=60&descSize=20&animation=fadeIn&cb=6"/>
 </div>
 
 <div align="center">
@@ -19,34 +19,12 @@
 
 ---
 
-## 📌 Overview
+## 📌 Executive Summary
 
 **FieldSense** brings precision agricultural intelligence to India's 120M+ smallholder farmers. 
 Traditional crop diagnostic services fail smallholders due to cost, geographical isolation, language barriers, and fragmented state advisory networks. FieldSense solves this with an instant, multimodal vision tool powered by **Google Gemini 3.6 Flash**, coupled with real-time weather integration, native 7-language voice accessibility, and an anonymized cross-state **Digital Public Good (DPG)** data layer.
 
 A single photo of a sick leaf gives farmers calibrated disease diagnosis, plain-language organic & chemical treatment options, localized soil guidance, and audio playback in their native mother tongue.
-
----
-
-## 🌐 Live Prototype & API Specs
-
-* **Local Web Interface**: `http://localhost:8080`
-* **Google Cloud Run Target**: Ready for 1-command deployment (`gcloud run deploy`)
-* **AI Model Engine**: Google Gemini API (`@google/genai` v1.15.0 using `gemini-3.6-flash`)
-* **Database Storage**: Decoupled `server/database.js` managing `server/data.json` (zero cost, zero container build risk)
-
----
-
-## ✨ Core Features
-
-| Feature | Description |
-|---|---|
-| 🔐 **Entrance Guard Auth** | First-time users see a full-page Login & Register entrance portal. Main app dashboard remains completely locked until authentication. |
-| 🍃 **Multimodal Vision Diagnosis** | Upload a photo of a sick crop leaf. Gemini 3.6 Flash identifies the crop and disease, rates confidence strictly (`high`, `medium`, `low`), and provides 2–4 low-cost treatment steps. |
-| 🌤️ **Localized Weather Advisory** | Combines crop selection, soil classification (Alluvial, Black Regur, Red/Yellow, Laterite), and GPS coordinates with OpenWeatherMap live weather to output customized farming guidance. |
-| 🌐 **Cross-State DPG Network** | Anonymizes and aggregates real-time diagnosis & advisory telemetry by state, streaming data to Gemini for cross-border disease surveillance and resource-sharing analysis. |
-| 🗣️ **7-Language Voice Accessibility** | Supports English, Hindi (हिन्दी), Tamil (தமிழ்), Telugu (తెలుగు), Kannada (ಕನ್ನಡ), Marathi (मराठी), and Bengali (বাংলা) with native Web Speech microphone input and text-to-speech audio playback. |
-| 🗄️ **Persistent DBMS Module** | Built-in zero-cost database layer (`server/database.js`) saving users and telemetry to `server/data.json` across server restarts. |
 
 ---
 
@@ -56,7 +34,7 @@ This matrix maps every requirement from the organizers' official challenge state
 
 | Organizer Challenge Requirement | FieldSense Implementation & Technology |
 |---|---|
-| **"Diagnostic tool for crop diseases"** | **01 Diagnose Tab:** Upload leaf photo → Gemini 3.6 Flash Vision identifies crop & disease, rates confidence strictly, and gives 2–4 low-cost treatment steps in plain language. |
+| **"Diagnostic tool for crop diseases"** | **01 Diagnose Tab:** Upload leaf photo → Gemini 3.6 Flash Vision identifies crop & disease, rates confidence strictly (`high`, `medium`, `low`), and gives 2–4 low-cost treatment steps in plain language. |
 | **"Real-time, localised agro-advisories using AI"** | **02 Advisory Tab:** Crop choice + soil classification + GPS coordinates → OpenWeatherMap live weather (temp, humidity, wind) + Gemini text generation produces action-oriented guidance. |
 | **"Regenerative crop recommendations based on satellite data, soil health, and weather forecasting"** | **02 Advisory Tab:** Factors in regional soil types (alluvial, black regur, red/yellow, laterite) + live weather forecasts + outputs regenerative farming tips. |
 | **"Scalable digital public good enabling Indian states to share agricultural data models"** | **03 Network Tab:** Shared cross-state telemetry dashboard aggregating anonymized crop health data by state, backed by Gemini AI macro pattern summaries. |
@@ -66,11 +44,54 @@ This matrix maps every requirement from the organizers' official challenge state
 
 ---
 
+## 🔬 Core Capabilities & Deep Feature Breakdown
+
+### 🔐 1. First-Time Entrance Guard Authentication
+- **Locked App Boundary**: Unauthenticated visitors see an interactive **Login & Register Portal** (`#auth-landing-screen`). The main application dashboard (`#main-app-container`) remains 100% locked and hidden until successful authentication.
+- **Account Profiles**: Supports **Farmer**, **Extension Officer / Agronomist**, and **State Agriculture Official** user roles.
+- **State Auto-Filling**: Saves user state preferences to `localStorage` and automatically populates form fields across the Diagnose and Advisory tabs.
+
+### 🍃 2. AI Vision Diagnosis & Defensive Prompt Research (`server/prompts.js`)
+- **Multimodal Engine**: Uses `@google/genai` with `gemini-3.6-flash` to process high-resolution crop photos.
+- **Defensive Anchoring**: Prompt strategy instructs Gemini to carefully distinguish harmless natural varietal traits (e.g., anthocyanin leaf vein pigmentation in cool weather) and nutrient chlorosis from true fungal, bacterial, or viral pathogens.
+- **Calibrated Confidence**: Forces Gemini to output strict confidence ratings (`high`, `medium`, `low`). Ambiguous photos return `low` confidence with instructions for the farmer to re-take the photo under clearer lighting.
+- **Structured JSON Schema**:
+  ```json
+  {
+    "usable": true,
+    "crop": "Potato",
+    "disease": "None",
+    "isHealthy": true,
+    "confidence": "medium",
+    "whatWeSee": "Reddish-purple vein pigmentation without necrotic spots.",
+    "whatToDo": "No chemical spray required. Keep soil evenly moist with balanced NPK.",
+    "preventItNextTime": "Maintain clear drainage channels."
+  }
+  ```
+
+### 🌤️ 3. Localized Agro-Advisory & Soil Integration
+- **Soil Classification**: Custom guidance for **Alluvial**, **Black (Regur)**, **Red & Yellow**, **Laterite**, **Arid/Desert**, and **Saline/Alkaline** soil profiles.
+- **Weather Grounding**: Integrates live weather metrics via OpenWeatherMap API (temperature, humidity percentage, wind speed).
+- **Regenerative Farming Focus**: Recommends organic compost, green manure, crop rotation, and water conservation practices to maintain long-term soil health.
+
+### 🌐 4. Digital Public Good (DPG) & Cross-State Data Modeling
+- **Privacy-Preserving Telemetry**: Standardized JSON schema logs anonymized diagnosis and advisory activity without storing private farmer names or personal contact information.
+- **State Aggregation Engine**: Grouping queries aggregate total activity, disease prevalence, and advisory metrics across Indian states.
+- **Gemini Macro Synthesis**: Streams aggregated telemetry to Gemini 3.6 Flash to analyze cross-border pest migration trends and output cooperative action steps (e.g., joint fungicide buffer management between neighboring states).
+
+### 🗣️ 5. Multilingual & Voice Accessibility Engine
+- **7 Native Indian Languages**: Full UI and AI generation in **English**, **Hindi (हिन्दी)**, **Tamil (தமிழ்)**, **Telugu (తెలుగు)**, **Kannada (ಕನ್ನಡ)**, **Marathi (मराठी)**, and **Bengali (বাংলা)**.
+- **Speech-to-Text Input**: Tap the microphone button in the Advisory tab to speak crop names natively using Web Speech Recognition (`SpeechRecognition`).
+- **Text-to-Speech Output**: Tap the **Listen** button on any diagnosis or advisory result card to hear guidance read aloud in the selected language using Web Speech Synthesis (`SpeechSynthesis`).
+
+---
+
 ## 🗂️ Project Structure
 
 ```
 FieldSense/
 ├── README.md                       # Main project landing page (this file)
+├── LICENSE                         # Official MIT License file
 ├── Dockerfile                      # Production Google Cloud Run container recipe
 ├── dbms_architecture.md            # Detailed DBMS architecture & entity relationship models
 ├── pitch_deck_and_submission.md    # 11-Slide pitch deck structure & portal submission guide
@@ -88,58 +109,6 @@ FieldSense/
     ├── .env                        # Active environment variables (GEMINI_API_KEY)
     └── package.json                # Server dependencies (@google/genai, express, cors, multer)
 ```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- **Node.js**: v18.0.0 or newer
-- **Google Gemini API Key**: Active key from [Google AI Studio](https://aistudio.google.com/apikey)
-
-### Setup & Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-username/FieldSense.git
-   cd FieldSense/server
-   ```
-
-2. **Configure Environment Variables**:
-   Create a `.env` file inside the `server/` directory:
-   ```env
-   GEMINI_API_KEY=AIzaSyYourActualKeyHere
-   GEMINI_MODEL=gemini-3.6-flash
-   OPENWEATHER_API_KEY=your_optional_openweather_key
-   PORT=8080
-   ```
-
-3. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
-
-4. **Launch Server**:
-   ```bash
-   npm start
-   ```
-   Open **`http://localhost:8080`** in your browser.
-
----
-
-## ☁️ Google Cloud Run Deployment
-
-FieldSense is fully containerized and production-ready for 1-command deployment to Google Cloud Run:
-
-```bash
-gcloud run deploy fieldsense \
-  --source . \
-  --region asia-south1 \
-  --set-env-vars GEMINI_API_KEY=your_gemini_key,GEMINI_MODEL=gemini-3.6-flash \
-  --allow-unauthenticated
-```
-
-The included `Dockerfile` builds a lightweight Node.js 20 container listening on port `8080`.
 
 ---
 
@@ -199,13 +168,65 @@ FieldSense implements a **Decoupled Data Repository Pattern** defined in `server
 
 ---
 
+## 🚀 Getting Started
+
+### Prerequisites
+- **Node.js**: v18.0.0 or newer
+- **Google Gemini API Key**: Active key from [Google AI Studio](https://aistudio.google.com/apikey)
+
+### Setup & Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/dharani25007-code/FieldSense.git
+   cd FieldSense/server
+   ```
+
+2. **Configure Environment Variables**:
+   Create a `.env` file inside the `server/` directory:
+   ```env
+   GEMINI_API_KEY=AIzaSyYourActualKeyHere
+   GEMINI_MODEL=gemini-3.6-flash
+   OPENWEATHER_API_KEY=your_optional_openweather_key
+   PORT=8080
+   ```
+
+3. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
+
+4. **Launch Server**:
+   ```bash
+   npm start
+   ```
+   Open **`http://localhost:8080`** in your browser.
+
+---
+
+## ☁️ Google Cloud Run Deployment
+
+FieldSense is fully containerized and production-ready for 1-command deployment to Google Cloud Run:
+
+```bash
+gcloud run deploy fieldsense \
+  --source . \
+  --region asia-south1 \
+  --set-env-vars GEMINI_API_KEY=your_gemini_key,GEMINI_MODEL=gemini-3.6-flash \
+  --allow-unauthenticated
+```
+
+The included `Dockerfile` builds a lightweight Node.js 20 container listening on port `8080`.
+
+---
+
 ## 👥 Team & Acknowledgments
 
-| Team Member | GitHub Handle | Role |
+| Team Member | GitHub Handle | Key Responsibilities & Contributions |
 |---|---|---|
-| **Dharani Dharan M** | [`@dharani25007-code`](https://github.com/dharani25007-code) | Lead Architect & Full-Stack Developer |
-| **Joe Flaming M** | [`@joeflaming777-lgtm`](https://github.com/joeflaming777-lgtm) | AI Vision & Prompt Research |
-| **Robinson A** | [`@Robinson2007`](https://github.com/Robinson2007) | Product Strategy & DPG Data Modeling |
+| **Dharani Dharan M** | [`@dharani25007-code`](https://github.com/dharani25007-code) | **Lead Architect & Full-Stack Developer** — Built Express server, Gemini 3.6 Flash proxy, Entrance Guard auth, Web Speech voice integration, and UI design system. |
+| **Joe Flaming M** | [`@joeflaming777-lgtm`](https://github.com/joeflaming777-lgtm) | **AI Vision & Prompt Research** — Developed defensive prompt anchoring, strict confidence calibration, and JSON schema validation for crop leaf disease analysis. |
+| **Robinson A** | [`@Robinson2007`](https://github.com/Robinson2007) | **Product Strategy & DPG Data Modeling** — Designed cross-state telemetry schema, Digital Public Good data exchange framework, and state aggregation analytics. |
 
 - **Hackathon**: Build with AI: Code for Communities (Second Edition)
 - **Organizers**: Hack2skill × GDG India (Google Developer Groups)
@@ -219,6 +240,6 @@ FieldSense implements a **Decoupled Data Repository Pattern** defined in `server
 [![Joe Flaming M](https://img.shields.io/badge/Joe_Flaming_M-AI_Vision-2fa860?style=for-the-badge&logo=github&logoColor=white)](https://github.com/joeflaming777-lgtm)
 [![Robinson A](https://img.shields.io/badge/Robinson_A-Product_Strategy-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Robinson2007)
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:2fa860,100:0f5c30&height=120&section=footer&cb=5"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:2fa860,100:0f5c30&height=120&section=footer&cb=6"/>
 
 </div>
