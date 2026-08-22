@@ -25,11 +25,43 @@ const upload = multer({
 const PORT = process.env.PORT || 8080;
 
 if (!process.env.GEMINI_API_KEY) {
-  console.warn("WARNING: GEMINI_API_KEY is not set. Copy server/.env.example to server/.env and add your key.");
+  console.warn("WARNING: GEMINI_API_KEY is not set. Add GEMINI_API_KEY in server/.env or Render environment variables.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+// Fallback placeholder prevents server boot crash if env var is missing during container deployment
+const apiKey = process.env.GEMINI_API_KEY || "placeholder_key_to_prevent_boot_crash";
+const ai = new GoogleGenAI({ apiKey });
+const PRIMARY_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+const FALLBACK_MODELS = [PRIMARY_MODEL, "gemini-2.5-flash", "gemini-1.5-flash"];
+
+async function generateWithFallback(contents, config) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    for (const modelName of FALLBACK_MODELS) {
+      try {
+        const res = await ai.models.generateContent({
+          model: modelName,
+          contents,
+          config,
+        });
+        return res;
+      } catch (err) {
+        lastError = err;
+        const msg = err.message || "";
+        const isRateLimit = err.status === 429 || msg.includes("429") || msg.includes("quota") || msg.includes("EXHAUSTED");
+
+        if (isRateLimit) {
+          console.warn(`Gemini API 429 Rate limit hit on ${modelName} (attempt ${attempt + 1}/3). Retrying in 2.5 seconds...`);
+          await new Promise((r) => setTimeout(r, 2500));
+          break;
+        }
+      }
+    }
+  }
+
+  throw lastError;
+}
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
@@ -101,9 +133,8 @@ app.post("/api/diagnose", upload.single("image"), async (req, res) => {
 
     const base64Image = req.file.buffer.toString("base64");
     const lang = req.body.lang || "en";
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: [
+    const response = await generateWithFallback(
+      [
         {
           role: "user",
           parts: [
@@ -112,7 +143,8 @@ app.post("/api/diagnose", upload.single("image"), async (req, res) => {
           ],
         },
       ],
-    });
+      { temperature: 0.1, maxOutputTokens: 600 }
+    );
 
     const result = parseJsonResponse(response.text);
 
@@ -131,7 +163,11 @@ app.post("/api/diagnose", upload.single("image"), async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error("Diagnose error:", err);
-    res.status(500).json({ error: "Diagnosis failed. Please try again with a clearer photo." });
+    const isRateLimit = err.status === 429 || (err.message && (err.message.includes("429") || err.message.includes("quota") || err.message.includes("EXHAUSTED")));
+    const userMsg = isRateLimit
+      ? "Gemini API rate limit reached (20 requests/min). Please wait 10 seconds and try again."
+      : "Diagnosis failed. Please try again with a clearer photo.";
+    res.status(isRateLimit ? 429 : 500).json({ error: userMsg });
   }
 });
 
@@ -166,10 +202,10 @@ app.post("/api/advisory", async (req, res) => {
       lang: lang || "en",
     });
 
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-    });
+    const response = await generateWithFallback(
+      [{ role: "user", parts: [{ text: prompt }] }],
+      { temperature: 0.2, maxOutputTokens: 500 }
+    );
 
     const result = parseJsonResponse(response.text);
     result.weatherUsed = Boolean(weatherSummary);
@@ -223,10 +259,10 @@ app.get("/api/network", async (req, res) => {
       };
     } else if (recent.length > 0) {
       const prompt = NETWORK_SUMMARY_PROMPT(recent, lang);
-      const response = await ai.models.generateContent({
-        model: MODEL,
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-      });
+      const response = await generateWithFallback(
+        [{ role: "user", parts: [{ text: prompt }] }],
+        { temperature: 0.2, maxOutputTokens: 500 }
+      );
       aiSummary = parseJsonResponse(response.text);
     }
 

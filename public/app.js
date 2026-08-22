@@ -196,17 +196,67 @@ leafInput.addEventListener("change", () => {
   reader.readAsDataURL(file);
 });
 
+async function compressImage(file, maxDimension = 1000, quality = 0.85) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name || "leaf.jpg", {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 diagnoseBtn.addEventListener("click", async () => {
   if (!selectedFile) return;
 
   setDiagnoseState("loading");
 
-  const formData = new FormData();
-  formData.append("image", selectedFile);
-  formData.append("state", stateSelect.value);
-  formData.append("lang", getCurrentLang());
-
   try {
+    const fileToUpload = await compressImage(selectedFile, 1000, 0.85);
+    const formData = new FormData();
+    formData.append("image", fileToUpload);
+    formData.append("state", stateSelect.value);
+    formData.append("lang", getCurrentLang());
+
     const res = await fetch(`${API_BASE}/api/diagnose`, { method: "POST", body: formData });
     const data = await res.json();
 

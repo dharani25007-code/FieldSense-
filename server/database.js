@@ -1,13 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import fetch from "node-fetch";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = path.join(__dirname, "data.json");
-
-const FIRESTORE_PROJECT_ID = process.env.FIRESTORE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || "fieldsense-dpg";
-const FIRESTORE_API_KEY = process.env.GEMINI_API_KEY || "";
 
 function loadDb() {
   try {
@@ -46,13 +42,19 @@ if (!fs.existsSync(DATA_FILE)) {
 }
 
 /**
- * Syncs user registrations to Google Cloud Firestore (NoSQL DBMS)
+ * Syncs user registrations to Google Cloud Firestore (NoSQL DBMS) safely
  */
 async function syncUserToFirestore(user) {
-  if (!FIRESTORE_PROJECT_ID || !FIRESTORE_API_KEY) return;
+  const projectId = process.env.FIRESTORE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!projectId || !apiKey) return;
+
   try {
-    const url = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/users/${user.id}?key=${FIRESTORE_API_KEY}`;
-    await fetch(url, {
+    const fetchFn = globalThis.fetch;
+    if (typeof fetchFn !== "function") return;
+
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${user.id}?key=${apiKey}`;
+    await fetchFn(url, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -67,18 +69,24 @@ async function syncUserToFirestore(user) {
       }),
     });
   } catch (e) {
-    console.warn("Firestore user sync background notice:", e.message);
+    console.warn("Firestore user sync notice:", e.message);
   }
 }
 
 /**
- * Syncs crop health telemetry to Google Cloud Firestore (NoSQL DBMS)
+ * Syncs crop health telemetry to Google Cloud Firestore (NoSQL DBMS) safely
  */
 async function syncTelemetryToFirestore(entry) {
-  if (!FIRESTORE_PROJECT_ID || !FIRESTORE_API_KEY) return;
+  const projectId = process.env.FIRESTORE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!projectId || !apiKey) return;
+
   try {
-    const url = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/telemetry?key=${FIRESTORE_API_KEY}`;
-    await fetch(url, {
+    const fetchFn = globalThis.fetch;
+    if (typeof fetchFn !== "function") return;
+
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/telemetry?key=${apiKey}`;
+    await fetchFn(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -93,7 +101,7 @@ async function syncTelemetryToFirestore(entry) {
       }),
     });
   } catch (e) {
-    console.warn("Firestore telemetry sync background notice:", e.message);
+    console.warn("Firestore telemetry sync notice:", e.message);
   }
 }
 
