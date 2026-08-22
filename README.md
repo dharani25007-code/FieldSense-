@@ -8,13 +8,10 @@
 ![Express](https://img.shields.io/badge/Express.js-4.x-000000?style=for-the-badge&logo=express&logoColor=white)
 ![Google Gemini](https://img.shields.io/badge/Google%20AI-Gemini%203.6%20Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)
 ![Google Cloud Run](https://img.shields.io/badge/Google%20Cloud-Cloud%20Run-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)
-
 ![Languages](https://img.shields.io/badge/Multilingual-7%20Indian%20Languages-2fa860?style=for-the-badge)
 ![DPG](https://img.shields.io/badge/Architecture-Digital%20Public%20Good-009688?style=for-the-badge)
 ![Hackathon](https://img.shields.io/badge/Hackathon-Build%20with%20AI%3A%20Code%20for%20Communities-orange?style=for-the-badge)
 ![License: MIT](https://img.shields.io/badge/License-MIT-4ecdc4?style=for-the-badge)
-
-<br/>
 
 > ⚡ **Multimodal Vision Diagnosis · Localised Soil & Weather Advisory · 7-Language Voice Engine · Cross-State DPG Telemetry**
 
@@ -207,8 +204,8 @@ FieldSense implements a **Decoupled Data Repository Pattern** defined in `server
 | Team Member | GitHub Handle | Role |
 |---|---|---|
 | **Dharani Dharan M** | [`@dharani25007-code`](https://github.com/dharani25007-code) | Lead Architect & Full-Stack Developer |
-| **Joe** | [`@joeflaming777-lgtm`](https://github.com/joeflaming777-lgtm) | AI Vision & Prompt Research |
-| **Robinson** | [`@Robinson2007`](https://github.com/Robinson2007) | Product Strategy & DPG Data Modeling |
+| **Joe Flaming M** | [`@joeflaming777-lgtm`](https://github.com/joeflaming777-lgtm) | AI Vision & Prompt Research |
+| **Robinson A** | [`@Robinson2007`](https://github.com/Robinson2007) | Product Strategy & DPG Data Modeling |
 
 - **Hackathon**: Build with AI: Code for Communities (Second Edition)
 - **Organizers**: Hack2skill × GDG India (Google Developer Groups)
@@ -217,7 +214,11 @@ FieldSense implements a **Decoupled Data Repository Pattern** defined in `server
 ---
 
 <div align="center">
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:2fa860,100:0f5c30&height=120&section=footer&cb=4"/>
 
-**Built with ❤️ by [Dharani Dharan M](https://github.com/dharani25007-code), [Joe](https://github.com/joeflaming777-lgtm), and [Robinson](https://github.com/Robinson2007)**
+[![Dharani Dharan M](https://img.shields.io/badge/Dharani_Dharan_M-Lead_Architect-0f5c30?style=for-the-badge&logo=github&logoColor=white)](https://github.com/dharani25007-code)
+[![Joe Flaming M](https://img.shields.io/badge/Joe_Flaming_M-AI_Vision-2fa860?style=for-the-badge&logo=github&logoColor=white)](https://github.com/joeflaming777-lgtm)
+[![Robinson A](https://img.shields.io/badge/Robinson_A-Product_Strategy-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Robinson2007)
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:2fa860,100:0f5c30&height=120&section=footer&cb=5"/>
+
 </div>
