@@ -35,43 +35,7 @@ app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-import fs from "fs";
-
-const DATA_FILE = path.join(__dirname, "data.json");
-
-function loadDb() {
-  try {
-    if (fs.existsSync(DATA_FILE)) {
-      const raw = fs.readFileSync(DATA_FILE, "utf8");
-      const parsed = JSON.parse(raw);
-      return {
-        users: Array.isArray(parsed.users) ? parsed.users : [],
-        networkLog: Array.isArray(parsed.networkLog) ? parsed.networkLog : [],
-      };
-    }
-  } catch (e) {
-    console.warn("Could not load data.json, initializing fresh store:", e.message);
-  }
-  return {
-    users: [
-      { id: "usr_1", name: "Dharani Dharan", identifier: "farmer@fieldsense.org", password: "password123", role: "farmer", state: "Tamil Nadu" },
-      { id: "usr_2", name: "Dr. K. Anbarasan", identifier: "officer@tnagri.gov.in", password: "password123", role: "officer", state: "Tamil Nadu" },
-    ],
-    networkLog: [],
-  };
-}
-
-const db = loadDb();
-const users = db.users;
-const networkLog = db.networkLog;
-
-function saveDb() {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ users, networkLog }, null, 2), "utf8");
-  } catch (e) {
-    console.warn("Could not write to data.json:", e.message);
-  }
-}
+import { users, networkLog, addUser, addTelemetry } from "./database.js";
 
 function sanitizeUser(user) {
   const { password, ...safe } = user;
@@ -90,17 +54,15 @@ app.post("/api/auth/register", (req, res) => {
     return res.status(400).json({ error: "An account with this email or phone number already exists." });
   }
 
-  const newUser = {
+  const newUser = addUser({
     id: `usr_${Date.now()}`,
     name: name.trim(),
     identifier: identifier.trim().toLowerCase(),
     password,
     role: role || "farmer",
     state: state || "",
-  };
+  });
 
-  users.push(newUser);
-  saveDb();
   res.json({ token: `token_${newUser.id}`, user: sanitizeUser(newUser) });
 });
 
@@ -156,7 +118,7 @@ app.post("/api/diagnose", upload.single("image"), async (req, res) => {
 
     // Log into the shared network layer (anonymised - no farmer identity, just crop/disease/location)
     if (result.usable) {
-      networkLog.push({
+      addTelemetry({
         type: "diagnosis",
         crop: result.crop,
         disease: result.disease,
@@ -164,7 +126,6 @@ app.post("/api/diagnose", upload.single("image"), async (req, res) => {
         state: req.body.state || "Unknown",
         timestamp: new Date().toISOString(),
       });
-      saveDb();
     }
 
     res.json(result);
@@ -213,14 +174,13 @@ app.post("/api/advisory", async (req, res) => {
     const result = parseJsonResponse(response.text);
     result.weatherUsed = Boolean(weatherSummary);
 
-    networkLog.push({
+    addTelemetry({
       type: "advisory",
       crop: crop || "unspecified",
       state: state || "Unknown",
       riskFlag: result.riskFlag,
       timestamp: new Date().toISOString(),
     });
-    saveDb();
 
     res.json(result);
   } catch (err) {
