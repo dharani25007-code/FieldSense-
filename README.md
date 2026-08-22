@@ -182,25 +182,24 @@ FieldSense implements a **Decoupled Data Repository Pattern** defined in `server
    cd FieldSense/server
    ```
 
-2. **Configure Environment Variables**:
-   Create a `.env` file inside the `server/` directory:
-   ```env
-   GEMINI_API_KEY=AIzaSyYourActualKeyHere
-   GEMINI_MODEL=gemini-3.6-flash
-   OPENWEATHER_API_KEY=your_optional_openweather_key
-   PORT=8080
+2. **Create `.env` from `.env.example` via Command**:
+   ```bash
+   # Copy .env.example to .env
+   cp .env.example .env          # On Linux/Mac/Git Bash
+   # or: Copy-Item .env.example .env (On Windows PowerShell)
    ```
+   Then open `server/.env` and add your `GEMINI_API_KEY=YOUR_GEMINI_API_KEY`.
 
-3. **Install Dependencies**:
+3. **Install Server Dependencies**:
    ```bash
    npm install
    ```
 
-4. **Launch Server**:
+4. **Launch Application Server (Serves API Backend & Frontend UI)**:
    ```bash
    npm start
    ```
-   Open **`http://localhost:8080`** in your browser.
+   Open **`http://localhost:8080`** in your browser to access the full FieldSense application!
 
 ---
 
@@ -209,10 +208,11 @@ FieldSense implements a **Decoupled Data Repository Pattern** defined in `server
 FieldSense is fully containerized and production-ready for 1-command deployment to Google Cloud Run:
 
 ```bash
+# Run from repository root (replace YOUR_GEMINI_API_KEY with your actual key)
 gcloud run deploy fieldsense \
   --source . \
   --region asia-south1 \
-  --set-env-vars GEMINI_API_KEY=your_gemini_key,GEMINI_MODEL=gemini-3.6-flash \
+  --set-env-vars GEMINI_API_KEY="YOUR_GEMINI_API_KEY",GEMINI_MODEL="gemini-3.6-flash" \
   --allow-unauthenticated
 ```
 
