@@ -201,7 +201,12 @@ FieldSense implements a **Decoupled Data Repository Pattern** defined in `server
 
 ## 👥 Team & Acknowledgments
 
-- **Developer**: Dharani Dharan M
+| Team Member | GitHub Handle | Role |
+|---|---|---|
+| **Dharani Dharan M** | [`@dharani25007-code`](https://github.com/dharani25007-code) | Lead Architect & Full-Stack Developer |
+| **Joe** | [`@joeflaming777-lgtm`](https://github.com/joeflaming777-lgtm) | AI Vision & Prompt Research |
+| **Robinson** | [`@Robinson2007`](https://github.com/Robinson2007) | Product Strategy & DPG Data Modeling |
+
 - **Hackathon**: Build with AI: Code for Communities (Second Edition)
 - **Organizers**: Hack2skill × GDG India (Google Developer Groups)
 - **Problem Statement**: Track 04 — Agricultural Intelligence
@@ -209,7 +214,7 @@ FieldSense implements a **Decoupled Data Repository Pattern** defined in `server
 ---
 
 <div align="center">
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:2fa860,100:0f5c30&height=120&section=footer&cb=3"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:2fa860,100:0f5c30&height=120&section=footer&cb=4"/>
 
-**Built by [Dharani Dharan M](https://github.com/dharani25007-code)**
+**Built with ❤️ by [Dharani Dharan M](https://github.com/dharani25007-code), [Joe](https://github.com/joeflaming777-lgtm), and [Robinson](https://github.com/Robinson2007)**
 </div>
