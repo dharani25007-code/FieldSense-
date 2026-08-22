@@ -83,10 +83,9 @@ function cleanTextForSpeech(text, lang) {
   let cleaned = String(text);
 
   if (lang !== "en") {
-    // Strip English translations inside parentheses like "(Tomato)" or "(Early Blight)" for smooth native speech
+    // Only strip English text inside parentheses like "(Tomato)" or "(Early Blight)"
     cleaned = cleaned.replace(/\s*\([A-Za-z0-9\s._\-/\\]+\)/g, "");
-    // Remove isolated English words in non-English text to prevent accent tripping
-    cleaned = cleaned.replace(/\s+[A-Za-z]{2,}\b/g, "");
+    // Do NOT strip isolated English words — crop/disease names are in English by design
   }
 
   // Remove markdown formatting symbols
@@ -106,13 +105,31 @@ function speak(text) {
   const speechLang = getSpeechLang(currentLang);
   utterance.lang = speechLang;
 
-  const voice = findVoiceForLang(speechLang);
-  if (voice) {
-    utterance.voice = voice;
-  }
+  // Wait for voices to load (some browsers load them asynchronously)
+  const trySetVoice = () => {
+    if (!cachedVoices.length) loadAvailableVoices();
+    const voice = findVoiceForLang(speechLang);
+    if (voice) {
+      utterance.voice = voice;
+    }
+  };
+  trySetVoice();
 
-  utterance.rate = 0.9; // Slightly deliberate pace for authentic regional pronunciation
+  utterance.rate = 0.9;
   utterance.pitch = 1.0;
+
+  // Error handler so speech never silently fails
+  utterance.onerror = (e) => {
+    console.warn("Speech synthesis error:", e.error, "for lang:", speechLang);
+  };
+
+  // Chrome bug workaround: voices sometimes load late
+  if (!cachedVoices.length && "speechSynthesis" in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      loadAvailableVoices();
+      trySetVoice();
+    };
+  }
 
   window.speechSynthesis.speak(utterance);
   return utterance;
