@@ -18,7 +18,7 @@ Look at the image and respond with ONLY a JSON object (no markdown fences, no ex
 {
   "crop": "string - the crop/plant name, or 'unclear' if you cannot tell",
   "isHealthy": true or false,
-  "disease": "string - disease name, or 'None' if healthy, or 'unclear' if the image is not a usable leaf photo",
+  "disease": "string - disease name, or 'None' if healthy, or 'unclear' if you truly cannot determine",
   "confidence": "high" | "medium" | "low",
   "symptoms": "string - 1-2 short sentences describing what you see in the image that supports your diagnosis",
   "treatment": "string - 2-4 short, concrete, affordable steps a small farmer in India could realistically take, using plain language, no jargon",
@@ -39,7 +39,7 @@ REFERENCE PATTERNS (use these as anchors, not an exhaustive list):
 - Bacterial leaf spot: small, angular, dark spots often with a yellow halo, doesn't follow leaf veins
 - Nutrient deficiency (e.g. nitrogen): uniform yellowing (chlorosis) starting from older leaves, no distinct lesion pattern - don't mistake this for disease
 
-Set "usable" to false ONLY if the image genuinely is not a leaf/plant photo at all (e.g. a person, a blank wall, unrelated object). If it's a leaf but blurry or partial, still do your best and note that in "symptoms".
+CRITICAL RULE FOR "usable": You MUST set "usable" to true for ANY image that shows ANY part of a plant — leaves, stems, branches, flowers, fruits, roots, a whole plant, multiple leaves, a field, a close-up, even if blurry or partially visible. Set "usable" to false ONLY if the image genuinely contains NO plant material at all (e.g. a person's face, a car, a building, food on a plate, a blank screen). When in doubt, ALWAYS set "usable" to true and do your best analysis.
 Be direct and practical in the wording, but honest in the "confidence" field - do not hedge excessively in the prose itself.
 
 IMPORTANT: Write the values of "symptoms", "treatment", and "prevention" entirely in native ${LANGUAGE_NAMES[lang] || "English"} script. Do NOT include English words or English translations inside parentheses (e.g. write pure Tamil/Hindi script only, without adding "(Tomato)" or English terms). Keep "crop", "disease", and "confidence" values in English so the app can match them consistently, and keep all JSON keys in English.

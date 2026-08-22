@@ -24,26 +24,58 @@ const upload = multer({
 });
 const PORT = process.env.PORT || 8080;
 
-if (!process.env.GEMINI_API_KEY) {
-  console.warn("WARNING: GEMINI_API_KEY is not set. Add GEMINI_API_KEY in server/.env or Render environment variables.");
+// ---------- Multi-Key API Key Pool & Load Balancer ----------
+const RAW_KEYS = [
+  process.env.GEMINI_API_KEY_1,
+  process.env.GEMINI_API_KEY_2,
+  process.env.GEMINI_API_KEY_3,
+  process.env.GEMINI_API_KEY_4,
+  process.env.GEMINI_API_KEY_5,
+  process.env.GEMINI_API_KEY_6,
+  process.env.GEMINI_API_KEY_7,
+  process.env.GEMINI_API_KEY_8,
+  process.env.GEMINI_API_KEY_9,
+  process.env.GEMINI_API_KEY_10,
+  ...(process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "").split(","),
+]
+  .map((k) => k?.trim())
+  .filter(Boolean);
+const API_KEYS = RAW_KEYS.length > 0 ? RAW_KEYS : ["placeholder_key_to_prevent_boot_crash"];
+
+if (RAW_KEYS.length === 0) {
+  console.warn("WARNING: GEMINI_API_KEY is not set. Add GEMINI_API_KEY or GEMINI_API_KEYS in server/.env.");
+} else {
+  console.log(`Loaded ${API_KEYS.length} active Gemini API key(s) into the load balancing pool.`);
 }
 
-// Fallback placeholder prevents server boot crash if env var is missing during container deployment
-const apiKey = process.env.GEMINI_API_KEY || "placeholder_key_to_prevent_boot_crash";
-const ai = new GoogleGenAI({ apiKey });
+let keyIndex = 0;
+function getAIClient() {
+  const key = API_KEYS[keyIndex % API_KEYS.length];
+  keyIndex = (keyIndex + 1) % API_KEYS.length;
+  return new GoogleGenAI({ apiKey: key });
+}
+
 const PRIMARY_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 const FALLBACK_MODELS = [PRIMARY_MODEL, "gemini-2.5-flash", "gemini-1.5-flash"];
 
 async function generateWithFallback(contents, config) {
   let lastError = null;
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  // Force JSON output mode — this tells Gemini to constrain decoding to valid JSON
+  const jsonConfig = {
+    ...config,
+    responseMimeType: "application/json",
+  };
+
+  // Try across all available API keys in the pool
+  for (let keyAttempt = 0; keyAttempt < Math.max(API_KEYS.length, 2); keyAttempt++) {
+    const ai = getAIClient();
     for (const modelName of FALLBACK_MODELS) {
       try {
         const res = await ai.models.generateContent({
           model: modelName,
           contents,
-          config,
+          config: jsonConfig,
         });
         return res;
       } catch (err) {
@@ -52,9 +84,8 @@ async function generateWithFallback(contents, config) {
         const isRateLimit = err.status === 429 || msg.includes("429") || msg.includes("quota") || msg.includes("EXHAUSTED");
 
         if (isRateLimit) {
-          console.warn(`Gemini API 429 Rate limit hit on ${modelName} (attempt ${attempt + 1}/3). Retrying in 2.5 seconds...`);
-          await new Promise((r) => setTimeout(r, 2500));
-          break;
+          console.warn(`API Key in pool hit rate limit (429). Rotating to next API key in pool...`);
+          break; // Instantly switch to the next API key in the pool!
         }
       }
     }
@@ -113,20 +144,88 @@ app.post("/api/auth/login", (req, res) => {
 });
 
 function parseJsonResponse(text) {
-  // Defensive extraction: find first '{' and last '}' to handle fences or stray LLM commentary
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start !== -1 && end !== -1 && end > start) {
-    return JSON.parse(text.substring(start, end + 1));
+  if (!text) throw new Error("Empty response from AI model.");
+
+  let raw = String(text).trim();
+
+  // Log first 300 chars of raw response for debugging
+  console.log("AI raw response (first 300 chars):", raw.substring(0, 300));
+
+  raw = raw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
+
+  // 1. Try direct parse (works when responseMimeType: "application/json" is active)
+  try {
+    return JSON.parse(raw);
+  } catch (_) {}
+
+  // 2. Balanced brace extraction
+  const start = raw.indexOf("{");
+  if (start !== -1) {
+    let depth = 0;
+    let end = -1;
+    let inString = false;
+    let escape = false;
+
+    for (let i = start; i < raw.length; i++) {
+      const char = raw[i];
+      if (escape) { escape = false; continue; }
+      if (char === "\\") { escape = true; continue; }
+      if (char === '"') { inString = !inString; continue; }
+      if (!inString) {
+        if (char === "{") depth++;
+        else if (char === "}") { depth--; if (depth === 0) { end = i; break; } }
+      }
+    }
+
+    if (end !== -1) {
+      const candidate = raw.substring(start, end + 1);
+      try { return JSON.parse(candidate); } catch (_) {}
+      try { return JSON.parse(candidate.replace(/[\r\n]+/g, " ")); } catch (_) {}
+    }
   }
-  const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
-  return JSON.parse(cleaned);
+
+  // 3. Fallback: first { to last }
+  const firstBrace = raw.indexOf("{");
+  const lastBrace = raw.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    let candidate = raw.substring(firstBrace, lastBrace + 1).replace(/[\r\n]+/g, " ");
+    try { return JSON.parse(candidate); } catch (_) {}
+  }
+
+  // 4. Last resort: Gemini returned pure text with no JSON at all.
+  //    Wrap it in a minimal valid response so the user still gets something.
+  console.warn("WARN: AI returned plain text instead of JSON. Wrapping in fallback structure.");
+  return {
+    crop: "unclear",
+    isHealthy: false,
+    disease: "unclear",
+    confidence: "low",
+    symptoms: raw.substring(0, 500),
+    treatment: raw.substring(0, 500),
+    prevention: "",
+    usable: true,
+    // Advisory fields (in case this is an advisory response)
+    headline: raw.substring(0, 200),
+    cropRecommendation: raw.substring(0, 500),
+    weatherNote: "",
+    soilNote: "",
+    riskFlag: "No immediate risk flagged",
+    sustainabilityTip: "",
+    // Network fields
+    summary: raw.substring(0, 500),
+    topConcern: "",
+    cooperationSuggestion: "",
+  };
+}
+
+function hasValidApiKey() {
+  return API_KEYS.length > 0 && !API_KEYS[0].includes("placeholder");
 }
 
 // ---------- Diagnose tab ----------
 app.post("/api/diagnose", upload.single("image"), async (req, res) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
+    if (!hasValidApiKey()) {
       return res.status(500).json({ error: "Server is missing GEMINI_API_KEY. Add it to server/.env and restart." });
     }
     if (!req.file) return res.status(400).json({ error: "No image uploaded." });
@@ -143,7 +242,7 @@ app.post("/api/diagnose", upload.single("image"), async (req, res) => {
           ],
         },
       ],
-      { temperature: 0.1, maxOutputTokens: 600 }
+      { temperature: 0.1, maxOutputTokens: 1500 }
     );
 
     const result = parseJsonResponse(response.text);
@@ -174,7 +273,7 @@ app.post("/api/diagnose", upload.single("image"), async (req, res) => {
 // ---------- Advisory tab ----------
 app.post("/api/advisory", async (req, res) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
+    if (!hasValidApiKey()) {
       return res.status(500).json({ error: "Server is missing GEMINI_API_KEY. Add it to server/.env and restart." });
     }
     const { crop, soilType, lat, lon, locationLabel, state, lang } = req.body;
@@ -204,7 +303,7 @@ app.post("/api/advisory", async (req, res) => {
 
     const response = await generateWithFallback(
       [{ role: "user", parts: [{ text: prompt }] }],
-      { temperature: 0.2, maxOutputTokens: 500 }
+      { temperature: 0.2, maxOutputTokens: 1200 }
     );
 
     const result = parseJsonResponse(response.text);
@@ -251,7 +350,7 @@ app.get("/api/network", async (req, res) => {
       cooperationSuggestion: "Run a diagnosis or advisory to start building live agricultural telemetry.",
     };
 
-    if (recent.length > 0 && !process.env.GEMINI_API_KEY) {
+    if (recent.length > 0 && !hasValidApiKey()) {
       aiSummary = {
         summary: "Server is missing GEMINI_API_KEY, so the AI summary can't be generated right now — showing raw activity by state below instead.",
         topConcern: "Unavailable without an API key",

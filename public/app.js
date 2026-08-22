@@ -262,7 +262,7 @@ diagnoseBtn.addEventListener("click", async () => {
 
     if (!res.ok) throw new Error(data.error || "Something went wrong.");
 
-    if (!data.usable) {
+    if (!data.usable && (!data.crop || data.crop === "unclear") && (!data.disease || data.disease === "unclear")) {
       renderDiagnoseError("That doesn't look like a usable leaf photo. Try a clear, well-lit photo of a single leaf.");
       return;
     }
