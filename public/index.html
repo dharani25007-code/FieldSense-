@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FieldSense — AI for every field</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 100 100" width="34" height="34" aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="#0f5c30" opacity="0.12"/>
+      <path d="M50 12 C68 18, 78 34, 73 55 C68 72, 50 68, 44 58 C22 50, 18 30, 34 15 C40 10, 45 11, 50 12 Z" fill="#2fa860"/>
+      <path d="M50 18 C46 34, 44 50, 46 66" fill="none" stroke="#0f5c30" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M32 50 L40 50 L45 38 L53 62 L58 46 L63 50 L70 50" fill="none" stroke="#f2fbf5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="brand-text">
+      <span class="brand-name">FieldSense</span>
+      <span class="brand-tag" data-i18n="brandTag">AI for every field</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <nav class="tabs" role="tablist" aria-label="FieldSense sections">
+      <button class="tab-btn active" data-tab="diagnose" role="tab" aria-selected="true" data-i18n="tabDiagnose">01 Diagnose</button>
+      <button class="tab-btn" data-tab="advisory" role="tab" aria-selected="false" data-i18n="tabAdvisory">02 Advisory</button>
+      <button class="tab-btn" data-tab="network" role="tab" aria-selected="false" data-i18n="tabNetwork">03 Network</button>
+    </nav>
+    <select id="lang-select" class="lang-select" aria-label="Language"></select>
+    <div id="auth-header-container">
+      <button id="open-auth-btn" class="btn-auth" type="button" data-i18n="authBtn">Login / Register</button>
+      <div id="user-badge" class="user-badge" hidden>
+        <div class="user-info">
+          <span id="user-name-display" class="user-name"></span>
+          <span id="user-role-display" class="user-role"></span>
+        </div>
+        <button id="logout-btn" class="btn-logout" type="button" data-i18n="logoutBtn" title="Logout">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ DIAGNOSE TAB ============ -->
+  <section id="diagnose" class="tab-panel active" role="tabpanel">
+    <div class="panel-intro">
+      <h1 data-i18n="diagHeading">Point your camera at the problem.</h1>
+      <p data-i18n="diagSub">Upload a photo of a crop leaf. FieldSense tells you what's wrong and what to do about it — no expert visit required.</p>
+    </div>
+
+    <div class="diagnose-grid">
+      <div class="upload-card">
+        <input type="file" id="leaf-input" accept="image/*" capture="environment" hidden />
+        <label for="leaf-input" class="upload-drop" id="upload-drop">
+          <div id="upload-placeholder">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 16V4M12 4L7 9M12 4L17 9" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p data-i18n="uploadPrompt">Tap to upload or take a photo</p>
+            <span class="muted" data-i18n="uploadHint">JPG or PNG, clear single leaf works best</span>
+          </div>
+          <img id="upload-preview" hidden alt="Uploaded leaf preview" />
+        </label>
+
+        <label class="state-select-label" for="state-select" data-i18n="stateLabel">Your state (optional, helps the shared network)</label>
+        <select id="state-select">
+          <option value="" data-i18n="selectState">Select state</option>
+          <option>Tamil Nadu</option><option>Karnataka</option><option>Kerala</option>
+          <option>Andhra Pradesh</option><option>Telangana</option><option>Maharashtra</option>
+          <option>Punjab</option><option>Haryana</option><option>Uttar Pradesh</option>
+          <option>Madhya Pradesh</option><option>Bihar</option><option>West Bengal</option>
+          <option>Gujarat</option><option>Rajasthan</option><option>Other</option>
+        </select>
+
+        <button id="diagnose-btn" class="btn-primary" disabled data-i18n="diagnoseBtn">Diagnose this leaf</button>
+      </div>
+
+      <div class="result-card" id="diagnose-result">
+        <div class="empty-state" id="diagnose-empty">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01" stroke-linecap="round"/></svg>
+          <p data-i18n="diagEmptyText">Your diagnosis will appear here.</p>
+        </div>
+        <div class="loading-state" id="diagnose-loading" hidden>
+          <div class="pulse-ring"></div>
+          <p data-i18n="diagLoadingText">Reading the leaf…</p>
+        </div>
+        <div class="result-content" id="diagnose-content" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ADVISORY TAB ============ -->
+  <section id="advisory" class="tab-panel" role="tabpanel" hidden>
+    <div class="panel-intro">
+      <h1 data-i18n="advHeading">Localised guidance, on demand.</h1>
+      <p data-i18n="advSub">Tell us your crop and soil, share your location, and get advice grounded in real weather — not a general almanac.</p>
+    </div>
+
+    <div class="diagnose-grid">
+      <div class="upload-card">
+        <label for="crop-input" data-i18n="cropLabel">Crop</label>
+        <div class="input-with-mic">
+          <input type="text" id="crop-input" data-i18n-placeholder="cropPlaceholder" placeholder="e.g. Tomato, Rice, Cotton" />
+          <button type="button" id="crop-mic-btn" class="mic-btn" aria-label="Speak crop name" title="Speak crop name">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <span class="muted" data-i18n="micHint">Tap the mic to speak the crop name</span>
+
+        <label for="soil-select" data-i18n="soilLabel">Soil type</label>
+        <select id="soil-select">
+          <option value="" data-i18n="selectSoil">Select soil type</option>
+          <option>Alluvial</option><option>Black (regur)</option><option>Red and yellow</option>
+          <option>Laterite</option><option>Arid/desert</option><option>Saline/alkaline</option>
+          <option>Not sure</option>
+        </select>
+
+        <label for="adv-state-select" data-i18n="stateLabelPlain">State</label>
+        <select id="adv-state-select">
+          <option value="" data-i18n="selectState">Select state</option>
+          <option>Tamil Nadu</option><option>Karnataka</option><option>Kerala</option>
+          <option>Andhra Pradesh</option><option>Telangana</option><option>Maharashtra</option>
+          <option>Punjab</option><option>Haryana</option><option>Uttar Pradesh</option>
+          <option>Madhya Pradesh</option><option>Bihar</option><option>West Bengal</option>
+          <option>Gujarat</option><option>Rajasthan</option><option>Other</option>
+        </select>
+
+        <button id="locate-btn" class="btn-secondary" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke-linecap="round"/></svg>
+          <span data-i18n="locateBtn">Use my location</span>
+        </button>
+        <span class="muted" id="location-status" data-i18n="locationNotShared">Location not shared yet — advisory will use general guidance.</span>
+
+        <button id="advisory-btn" class="btn-primary" data-i18n="advisoryBtn">Get advisory</button>
+      </div>
+
+      <div class="result-card" id="advisory-result">
+        <div class="empty-state" id="advisory-empty">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3v2M12 19v2M5 5l1.5 1.5M17.5 17.5L19 19M3 12h2M19 12h2M5 19l1.5-1.5M17.5 6.5L19 5" stroke-linecap="round"/><circle cx="12" cy="12" r="4"/></svg>
+          <p data-i18n="advEmptyText">Your advisory will appear here.</p>
+        </div>
+        <div class="loading-state" id="advisory-loading" hidden>
+          <div class="pulse-ring"></div>
+          <p data-i18n="advLoadingText">Building your advisory…</p>
+        </div>
+        <div class="result-content" id="advisory-content" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NETWORK TAB ============ -->
+  <section id="network" class="tab-panel" role="tabpanel" hidden>
+    <div class="panel-intro">
+      <h1 data-i18n="netHeading">One field's data helps the next.</h1>
+      <p data-i18n="netSub">Every diagnosis and advisory feeds an anonymised, shared view across states — the beginning of a cooperative agricultural data network.</p>
+    </div>
+
+    <div class="network-layout">
+      <div class="network-summary-card" id="network-summary">
+        <div class="loading-state" id="network-loading">
+          <div class="pulse-ring"></div>
+          <p data-i18n="netLoadingText">Loading network activity…</p>
+        </div>
+        <div id="network-content" hidden></div>
+      </div>
+
+      <div class="network-states-card">
+        <h3 data-i18n="statesByActivity">Activity by state</h3>
+        <div id="states-list" class="states-list"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p data-i18n="footer">FieldSense — built for Build with AI: Code for Communities · Google AI (Gemini) powering every diagnosis and advisory</p>
+</footer>
+
+<!-- Auth Modal -->
+<div id="auth-modal" class="modal-overlay" hidden aria-hidden="true">
+  <div class="modal-card">
+    <button id="close-auth-btn" class="modal-close" type="button" aria-label="Close modal">&times;</button>
+    <div class="modal-header">
+      <h2 data-i18n="authModalTitle">Welcome to FieldSense</h2>
+      <div class="auth-tabs" role="tablist">
+        <button id="auth-tab-login" class="auth-tab active" type="button" data-auth-tab="login" data-i18n="tabLogin">Login</button>
+        <button id="auth-tab-register" class="auth-tab" type="button" data-auth-tab="register" data-i18n="tabRegister">Register</button>
+      </div>
+    </div>
+
+    <form id="auth-form" class="auth-form">
+      <div class="auth-error-box" id="auth-error" hidden></div>
+
+      <div class="form-group" id="group-name" hidden>
+        <label for="auth-name" data-i18n="nameLabel">Full Name</label>
+        <input type="text" id="auth-name" data-i18n-placeholder="namePlaceholder" placeholder="e.g. Ramesh Kumar" />
+      </div>
+
+      <div class="form-group">
+        <label for="auth-identifier" data-i18n="identifierLabel">Email or Phone Number</label>
+        <input type="text" id="auth-identifier" data-i18n-placeholder="identifierPlaceholder" placeholder="e.g. farmer@example.com or 9876543210" required />
+      </div>
+
+      <div class="form-group">
+        <label for="auth-password" data-i18n="passwordLabel">Password</label>
+        <input type="password" id="auth-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Enter password" required />
+      </div>
+
+      <div class="form-group" id="group-role" hidden>
+        <label for="auth-role" data-i18n="roleLabel">Account Type</label>
+        <select id="auth-role">
+          <option value="farmer" data-i18n="roleFarmer">Farmer</option>
+          <option value="officer" data-i18n="roleOfficer">Extension Officer / Agronomist</option>
+          <option value="official" data-i18n="roleOfficial">State Agriculture Official</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="group-state" hidden>
+        <label for="auth-state" data-i18n="stateLabelAuth">State / Union Territory</label>
+        <select id="auth-state">
+          <option value="" data-i18n="selectState">Select state</option>
+          <option>Tamil Nadu</option><option>Karnataka</option><option>Kerala</option>
+          <option>Andhra Pradesh</option><option>Telangana</option><option>Maharashtra</option>
+          <option>Punjab</option><option>Haryana</option><option>Uttar Pradesh</option>
+          <option>Madhya Pradesh</option><option>Bihar</option><option>West Bengal</option>
+          <option>Gujarat</option><option>Rajasthan</option><option>Other</option>
+        </select>
+      </div>
+
+      <button type="submit" id="auth-submit-btn" class="btn-primary auth-submit" data-i18n="loginSubmit">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
