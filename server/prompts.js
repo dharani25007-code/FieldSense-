@@ -42,7 +42,7 @@ REFERENCE PATTERNS (use these as anchors, not an exhaustive list):
 Set "usable" to false ONLY if the image genuinely is not a leaf/plant photo at all (e.g. a person, a blank wall, unrelated object). If it's a leaf but blurry or partial, still do your best and note that in "symptoms".
 Be direct and practical in the wording, but honest in the "confidence" field - do not hedge excessively in the prose itself.
 
-IMPORTANT: Write the values of "symptoms", "treatment", and "prevention" in ${LANGUAGE_NAMES[lang] || "English"} (not English, unless the target language IS English). Keep "crop", "disease", and "confidence" values in English so the app can match them consistently, and keep all JSON keys in English.
+IMPORTANT: Write the values of "symptoms", "treatment", and "prevention" entirely in native ${LANGUAGE_NAMES[lang] || "English"} script. Do NOT include English words or English translations inside parentheses (e.g. write pure Tamil/Hindi script only, without adding "(Tomato)" or English terms). Keep "crop", "disease", and "confidence" values in English so the app can match them consistently, and keep all JSON keys in English.
 Do not include any text outside the JSON object.`;
 
 export const ADVISORY_PROMPT = ({ crop, soilType, weatherSummary, locationLabel, lang = "en" }) => `You are an agronomist generating a short, localised agro-advisory for a small or marginal farmer in India.
@@ -66,7 +66,7 @@ Respond with ONLY a JSON object (no markdown fences, no extra text) in exactly t
 
 Be concrete and specific to the given context, not generic. If a field (crop, soil, weather) was not provided, say so explicitly and give the best regional default rather than a vague platitude - e.g. "For Tamil Nadu red soil in this season, groundnut and pulses are common choices" rather than "many crops can grow well here." Plain language, no jargon.
 
-IMPORTANT: Write all string values in ${LANGUAGE_NAMES[lang] || "English"} (not English, unless the target language IS English). Keep all JSON keys in English.
+IMPORTANT: Write all string values entirely in native ${LANGUAGE_NAMES[lang] || "English"} script. Do NOT include English words or English translations inside parentheses (e.g. write pure Tamil/Hindi script only). Keep all JSON keys in English.
 Do not include any text outside the JSON object.`;
 
 export const NETWORK_SUMMARY_PROMPT = (recentEntries, lang = "en") => `You are summarising recent crop health activity logged across a shared, multi-state agricultural data network in India, for a dashboard used by state agriculture officers.

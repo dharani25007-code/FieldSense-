@@ -27,11 +27,93 @@ langSelect.addEventListener("change", () => {
 applyTranslations();
 
 // ---------- Speech helpers (Web Speech API) ----------
+let cachedVoices = [];
+function loadAvailableVoices() {
+  if ("speechSynthesis" in window) {
+    cachedVoices = window.speechSynthesis.getVoices() || [];
+  }
+}
+if ("speechSynthesis" in window) {
+  loadAvailableVoices();
+  window.speechSynthesis.onvoiceschanged = loadAvailableVoices;
+}
+
+function findVoiceForLang(langTag) {
+  if (!cachedVoices.length) loadAvailableVoices();
+  const primaryLang = langTag.split("-")[0].toLowerCase();
+
+  if (primaryLang === "en") {
+    return cachedVoices.find((v) => v.lang.toLowerCase().startsWith("en-in") || v.lang.toLowerCase().startsWith("en")) || null;
+  }
+
+  const langKeywords = {
+    ta: ["ta-in", "ta_in", "tamil", "தமிழ்"],
+    hi: ["hi-in", "hi_in", "hindi", "हिन्दी"],
+    te: ["te-in", "te_in", "telugu", "తెలుగు"],
+    kn: ["kn-in", "kn_in", "kannada", "ಕನ್ನಡ"],
+    mr: ["mr-in", "mr_in", "marathi", "மராठी"],
+    bn: ["bn-in", "bn_in", "bengali", "bangla", "বাংলা"],
+  };
+
+  const keywords = langKeywords[primaryLang] || [primaryLang];
+
+  const candidates = cachedVoices.filter((v) => {
+    const l = v.lang.toLowerCase();
+    const n = v.name.toLowerCase();
+    return l.startsWith(primaryLang) || keywords.some((k) => l.includes(k) || n.includes(k));
+  });
+
+  if (candidates.length > 0) {
+    // Prioritize authentic native regional voices (Google தமிழ், Microsoft Valluvar, etc.)
+    const nativeVoice = candidates.find(
+      (v) =>
+        v.name.includes("Google") ||
+        v.name.includes("Microsoft") ||
+        v.name.includes("Natural") ||
+        v.localService === true
+    );
+    return nativeVoice || candidates[0];
+  }
+
+  return null;
+}
+
+function cleanTextForSpeech(text, lang) {
+  if (!text) return "";
+  let cleaned = String(text);
+
+  if (lang !== "en") {
+    // Strip English translations inside parentheses like "(Tomato)" or "(Early Blight)" for smooth native speech
+    cleaned = cleaned.replace(/\s*\([A-Za-z0-9\s._\-/\\]+\)/g, "");
+    // Remove isolated English words in non-English text to prevent accent tripping
+    cleaned = cleaned.replace(/\s+[A-Za-z]{2,}\b/g, "");
+  }
+
+  // Remove markdown formatting symbols
+  cleaned = cleaned.replace(/[*#_`~]/g, " ").replace(/\s+/g, " ").trim();
+  return cleaned;
+}
+
 function speak(text) {
   if (!("speechSynthesis" in window) || !text) return null;
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = getSpeechLang(getCurrentLang());
+
+  const currentLang = getCurrentLang();
+  const cleanedText = cleanTextForSpeech(text, currentLang);
+  if (!cleanedText) return null;
+
+  const utterance = new SpeechSynthesisUtterance(cleanedText);
+  const speechLang = getSpeechLang(currentLang);
+  utterance.lang = speechLang;
+
+  const voice = findVoiceForLang(speechLang);
+  if (voice) {
+    utterance.voice = voice;
+  }
+
+  utterance.rate = 0.9; // Slightly deliberate pace for authentic regional pronunciation
+  utterance.pitch = 1.0;
+
   window.speechSynthesis.speak(utterance);
   return utterance;
 }
