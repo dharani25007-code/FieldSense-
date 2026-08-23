@@ -87,6 +87,9 @@ const I18N = {
     registerSubmit: "Create Account",
     logoutBtn: "Logout",
     loggedInAs: "Logged in as",
+    shareWhatsapp: "Share on WhatsApp",
+    organicSavings: "Organic Savings: ₹800/acre",
+    pwaInstall: "Install App",
   },
   hi: {
     brandTag: "हर खेत के लिए AI",
@@ -235,6 +238,8 @@ const I18N = {
     registerSubmit: "கணக்கை உருவாக்கு",
     logoutBtn: "வெளியேறு",
     loggedInAs: "உள்நுழைந்துள்ளவர்:",
+    shareWhatsapp: "வாட்ஸ்அப்பில் பகிரவும்",
+    organicSavings: "🌱 இயற்கை சேமிப்பு: ₹800/ஏக்கர்",
   },
   te: {
     brandTag: "ప్రతి పొలానికి AI",
