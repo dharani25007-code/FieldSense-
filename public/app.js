@@ -301,16 +301,46 @@ function renderDiagnoseError(message) {
   diagnoseContent.innerHTML = `<div class="error-box">${escapeHtml(message)}</div>`;
 }
 
+function formatConfidence(confidence, lang) {
+  const level = String(confidence || "medium").toLowerCase();
+  const map = {
+    en: { high: "High Confidence", medium: "Medium Confidence", low: "Low Confidence" },
+    hi: { high: "उच्च विश्वास", medium: "मध्यम विश्वास", low: "कम विश्वास" },
+    ta: { high: "உயர் நம்பிக்கை", medium: "மிதமான நம்பிக்கை", low: "குறைந்த நம்பிக்கை" },
+    te: { high: "అధిక నమ్మకం", medium: "మధ్యస్థ నమ్మకం", low: "తక్కువ నమ్మకం" },
+    kn: { high: "ಹೆಚ್ಚಿನ ನಂಬಿಕೆ", medium: "ಮಧ್ಯಮ ನಂಬಿಕೆ", low: "ಕಡಿಮೆ ನಂಬಿಕೆ" },
+    mr: { high: "उच्च विश्वास", medium: "मध्यम विश्वास", low: "कमी विश्वास" },
+    bn: { high: "উচ্চ আত্মবিশ্বাস", medium: "মাঝারি আত্মবিশ্বাস", low: "কম আত্মবিশ্বাস" },
+  };
+  const langMap = map[lang] || map.en;
+  return langMap[level] || langMap.medium;
+}
+
+function buildWhatsappShareButton(text) {
+  const btn = document.createElement("a");
+  btn.target = "_blank";
+  btn.rel = "noopener noreferrer";
+  btn.className = "whatsapp-share-btn";
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg><span>${t("shareWhatsapp") || "Share via WhatsApp"}</span>`;
+  btn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+  return btn;
+}
+
 function renderDiagnoseResult(data) {
   setDiagnoseState("content");
+  const currentLang = getCurrentLang();
   const badgeClass = data.isHealthy ? "badge-healthy" : "badge-disease";
   const badgeText = data.isHealthy ? t("rowHealthy") : data.disease;
+  const confidenceBadge = formatConfidence(data.confidence, currentLang);
+  const organicSavingsBadge = t("organicSavings") || "🌱 Est. Organic Savings: ₹800/acre";
+  const savingsText = data.isHealthy ? "" : `<span class="badge badge-savings">${escapeHtml(organicSavingsBadge)}</span>`;
 
   diagnoseContent.innerHTML = `
     <h2>${escapeHtml(data.crop)}</h2>
-    <div class="row">
+    <div class="row-badges">
       <span class="badge ${badgeClass}">${escapeHtml(badgeText)}</span>
-      <span class="badge badge-confidence">${escapeHtml(data.confidence)} ${escapeHtml(t("rowConfidence"))}</span>
+      <span class="badge badge-confidence">${escapeHtml(confidenceBadge)}</span>
+      ${savingsText}
     </div>
     <div class="row">
       <div class="row-label">${escapeHtml(t("rowWhatWeSee"))}</div>
@@ -327,7 +357,40 @@ function renderDiagnoseResult(data) {
   `;
 
   const spokenSummary = [data.crop, badgeText, data.symptoms, data.treatment, data.prevention].filter(Boolean).join(". ");
-  diagnoseContent.appendChild(buildListenButton(() => spokenSummary));
+  const shareText = `🌾 FieldSense Crop Advisory:\nCrop: ${data.crop}\nStatus/Disease: ${badgeText}\nSymptoms: ${data.symptoms}\nRemedy: ${data.treatment}\n\nGet free AI farm advisories: https://fieldsense-ai.onrender.com`;
+
+  const actionContainer = document.createElement("div");
+  actionContainer.className = "result-actions";
+  actionContainer.appendChild(buildListenButton(() => spokenSummary));
+  actionContainer.appendChild(buildWhatsappShareButton(shareText));
+  diagnoseContent.appendChild(actionContainer);
+}
+
+let deferredPrompt = null;
+const pwaInstallBtn = document.getElementById("pwa-install-btn");
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (pwaInstallBtn) pwaInstallBtn.hidden = false;
+});
+
+if (pwaInstallBtn) {
+  pwaInstallBtn.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      pwaInstallBtn.hidden = true;
+    }
+    deferredPrompt = null;
+  });
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
 }
 
 // ---------- Advisory tab ----------
