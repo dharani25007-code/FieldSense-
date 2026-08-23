@@ -116,4 +116,11 @@ export function addTelemetry(entry) {
   networkLog.push(entry);
   saveDb();
   syncTelemetryToFirestore(entry).catch(() => {});
-  return entr
+  return entry;
+}
+
+export function clearAllData() {
+  users.length = 0;
+  networkLog.length = 0;
+  saveDb();
+}
