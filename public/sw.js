@@ -21,12 +21,3 @@ self.addEventListener("activate", (e) => {
       Promise.all(keys.map((k) => k !== CACHE_NAME && caches.delete(k)))
     )
   );
-  self.clients.claim();
-});
-
-self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET" || e.request.url.includes("/api/")) return;
-  e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
-  );
-});
