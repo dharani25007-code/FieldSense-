@@ -118,7 +118,17 @@ FieldSense solves the fundamental limitations of existing agricultural platforms
 - **Speech-to-Text Input**: Tap the microphone button in the Advisory tab to speak crop names natively using Web Speech Recognition (`SpeechRecognition`).
 - **Text-to-Speech Output**: Tap the **Listen** button on any diagnosis or advisory result card to hear guidance read aloud in the selected language using Web Speech Synthesis (`SpeechSynthesis`), with intelligent voice prioritization (Google Tamil, Microsoft Valluvar, etc.).
 
-### ⚡ 6. Multi-Key API Load Balancer (`server/index.js`)
+### 📲 6. WhatsApp Audio Prescription & Community Sharing
+- **1-Tap WhatsApp Voice Sharing**: Generates a pre-formatted WhatsApp share link (`https://wa.me/?text=...`) carrying the crop diagnosis, remedies in native script, and direct web link for immediate sharing across village farmer WhatsApp groups.
+
+### 💰 7. Organic Cost Savings Estimator
+- **₹/Acre Financial Impact**: Automatically displays an **Est. Organic Savings Badge** (`🌱 Est. Organic Savings: ₹800/acre`) on diagnosis cards when bio-remedies (Neem oil, Panchagavya, crop rotation) are recommended over commercial chemical pesticides.
+
+### 📱 8. Progressive Web App (PWA) Offline Shell & Native Installation
+- **PWA Web App Manifest (`public/manifest.json`)**: Enables instant **"Add to Home Screen"** installation on Android devices without app store downloads.
+- **Service Worker (`public/sw.js`)**: Caches client assets for instant loading in low-connectivity rural environments.
+
+### ⚡ 9. Multi-Key API Load Balancer (`server/index.js`)
 - **Round-Robin Key Pool**: Supports up to 10 separate Gemini API keys (`GEMINI_API_KEY_1` through `GEMINI_API_KEY_10`) for automatic request distribution.
 - **Instant 429 Failover**: If any key hits rate limits, the server instantly rotates to the next key in the pool with zero user-visible latency.
 - **Linear Quota Scaling**: 6 free-tier keys = 120 requests/minute (172,800 requests/day) at $0 cost.
@@ -140,7 +150,9 @@ FieldSense/
 │   ├── index.html                  # Single Page Application wrapper & Entrance Guard
 │   ├── styles.css                  # Custom design system with glassmorphic cards & tokens
 │   ├── app.js                      # Client router, voice synthesis, camera, & auth logic
-│   └── i18n.js                     # 7-Language translation dictionaries
+│   ├── i18n.js                     # 7-Language translation dictionaries
+│   ├── manifest.json               # Web App Manifest for PWA native installation
+│   └── sw.js                       # Service worker for offline shell caching
 └── server/
     ├── index.js                    # Express API server, Gemini proxy, Multi-Key Load Balancer
     ├── database.js                 # Decoupled DBMS repository module (loadDb, saveDb, addUser)
