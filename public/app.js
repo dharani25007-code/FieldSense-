@@ -377,7 +377,10 @@ window.addEventListener("beforeinstallprompt", (e) => {
 
 if (pwaInstallBtn) {
   pwaInstallBtn.addEventListener("click", async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      alert("To install FieldSense:\n\n• Chrome/Edge: Click the ⋮ menu → 'Install App'\n• Safari (iOS): Tap Share → 'Add to Home Screen'\n• Firefox: Use the address bar install icon");
+      return;
+    }
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
