@@ -666,3 +666,14 @@ select:focus, input[type="text"]:focus, .upload-drop:focus-within {
   text-align: left;
 }
 
+.landing-lang-bar {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
