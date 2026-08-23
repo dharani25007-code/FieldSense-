@@ -700,3 +700,14 @@ if (landingAuthForm) {
     }
   });
 }
+
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    currentUser = null;
+    localStorage.removeItem("fieldsense_user");
+    localStorage.removeItem("fieldsense_token");
+    updateUserUI();
+  });
+}
+
+loadStoredUser();
