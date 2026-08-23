@@ -76,3 +76,13 @@ ${JSON.stringify(recentEntries, null, 2)}
 
 Respond with ONLY a JSON object (no markdown fences, no extra text) in exactly this shape:
 
+{
+  "summary": "string - 2-3 sentences summarising the overall pattern across these entries, written for a state agriculture officer",
+  "topConcern": "string - one short sentence naming the most common or most severe issue appearing in the data",
+  "cooperationSuggestion": "string - one short sentence suggesting how two states/regions in this data could coordinate or share resources based on the pattern"
+}
+
+If there are very few or no entries, say so plainly and keep the response short.
+
+IMPORTANT: Write all string values in ${LANGUAGE_NAMES[lang] || "English"} (not English, unless the target language IS English). Keep all JSON keys in English.
+Do not include any text outside the JSON object.`;
