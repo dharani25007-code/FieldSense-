@@ -544,3 +544,15 @@ function t(key) {
   return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
 }
 
+function getCurrentLang() {
+  return localStorage.getItem("fieldsense_lang") || "en";
+}
+
+function setCurrentLang(code) {
+  localStorage.setItem("fieldsense_lang", code);
+}
+
+function getSpeechLang(code) {
+  const lang = LANGUAGES.find((l) => l.code === code);
+  return lang ? lang.speechLang : "en-IN";
+}
