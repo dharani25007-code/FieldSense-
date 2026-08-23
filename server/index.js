@@ -386,9 +386,4 @@ app.use((err, req, res, next) => {
     console.error("Request error:", err.message);
     return res.status(400).json({ error: err.message || "Something went wrong with your request." });
   }
-  next();
-});
-
-app.listen(PORT, () => {
-  console.log(`FieldSense server running on port ${PORT}`);
-});
+  
